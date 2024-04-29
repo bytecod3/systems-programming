@@ -15,8 +15,8 @@ int main() {
 #if defined (_WIN32)
     // initialize the windows WINSOCK API
     WSADATA d;
-    if(WSAStartup(MAKEWORD(2,2), &d) ) {
-        fprintf(stderr, "failure yo initialize\n");
+    if(WSAStartup(MAKEWORD(2,2), &d) ) { // winsock version 2.2
+        fprintf(stderr, "failure to initialize\n");
         return -1;
     }
 #endif
