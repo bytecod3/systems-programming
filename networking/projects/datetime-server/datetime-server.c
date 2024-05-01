@@ -7,22 +7,23 @@
 #include <stdio.h>
 #include <string.h>
 
+// NOTE: DEFINE THIS BEFORE INCLUDING ANY WINDOWS HEADER
 #ifdef _WIN32
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-#endif
-#include <winsock.h>
+    #ifndef _WIN32_WINNT
+        #define _WIN32_WINNT 0x0600
+    #endif
+
+#include <winsock2.h>
 #include <ws2tcpip.h>
 
 #else // UNIX headers
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <netdb.h>
+    #include <unistd.h>
+    #include <errno.h>
 
 #endif
 
@@ -38,6 +39,7 @@ int main() {
     }
 #endif
 
+
     printf("Configuring local address...\n");
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -46,12 +48,11 @@ int main() {
     hints.ai_flags = AI_PASSIVE;
 
     struct addrinfo *bind_address;
-    getaddrinfo(0, "8080", &hints, &bind_address);
+    getaddrinfo(0, "9090", &hints, &bind_address);
 
     printf("Setting up sockets...\n");
     SOCKET socket_listen;
-    socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
-
+    socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 
     // check for successful socket creation
     if(!(ISVALIDSOCKET(socket_listen))) {
@@ -104,7 +105,7 @@ int main() {
     printf("Received %d bytes. \n", bytes_received);
 
     // log the HTTP request
-    printf("%.*s", bytes_received, request);
+//    printf("%.*s", bytes_received, request);
 
     // SEND RESPONSE
     printf("Sending response...\n");
@@ -115,17 +116,22 @@ int main() {
             "Local time is: ";
 
     int bytes_sent = send(socket_client, response, strlen(response), 0);
-    printf("Sent %d of %d bytes. \n", bytes_Sent, (int) strlen(response));
+    printf("Sent %d of %d bytes. \n", bytes_sent, (int) strlen(response));
 
     // get the time
     time_t timer;
     time(&timer);
     char* time_msg = ctime(&timer);
+    printf("Time: %s\n",  time_msg);
     bytes_sent = send(socket_client, time_msg, strlen(time_msg), 0);
     printf("Sent %d of %d bytes. \n", bytes_sent, (int)strlen(time_msg));
 
     // CLOSE THE CLIENT CONNECTION
-    printf("Closing connection..");
+    printf("Closing connection");
+    CLOSESOCKET(socket_client);
+
+    // CLOSE THE LISTENING CONNECTION
+    printf("Closing listening socket...");
     CLOSESOCKET(socket_listen);
 
 #ifdef _WIN_32
@@ -135,5 +141,6 @@ int main() {
     printf("Finished.\n");
 
     return 0;
+
 
 }
